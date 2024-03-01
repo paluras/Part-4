@@ -1,9 +1,0 @@
-post http://localhost:3004/api/blogs
-content-type: application/json
-
-{
-    "title": "sampasle",
-    "author": "Ala",
-    "url":"hahah",
-    "likes":12
-}
