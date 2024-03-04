@@ -2,9 +2,24 @@ const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 
 blogsRouter.get('/', async (request, response) => {
-
   const blogs = await Blog.find({})
   response.json(blogs)
+})
+
+blogsRouter.delete('/:id', async (request, response) => {
+  await Blog.findByIdAndDelete(request.params.id)
+  response.status(204).end()
+})
+
+
+blogsRouter.put('/:id', async (request, response) => {
+  const body = request.body
+  const blog = {
+    likes: body.likes
+  }
+
+  const updateBlog = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
+  response.json(updateBlog)
 })
 
 blogsRouter.post('/', async (request, response, next) => {
@@ -18,9 +33,9 @@ blogsRouter.post('/', async (request, response, next) => {
   })
 
 
-  if(!blog.title || !blog.url){
+  if (!blog.title || !blog.url) {
     return response.status(400).send({
-      error:"Title or URL is required"
+      error: "Title or URL is required"
     })
   }
 

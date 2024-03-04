@@ -27,15 +27,16 @@ const initialBlog = [
 ]
 
 
-beforeEach(async () => {
-    await Blog.deleteMany({})
-    let blogObj = new Blog(initialBlog[0])
-    await blogObj.save()
-    blogObj = new Blog(initialBlog[1])
-    await blogObj.save()
-})
-describe('test listBack', () => {
 
+describe('test listBack', () => {
+    beforeEach(async () => {
+        await Blog.deleteMany({})
+        const savePromises = initialBlog.map(blog => {
+            const blogObj = new Blog(blog)
+            return blogObj.save()
+        })
+        await Promise.all(savePromises)
+    })
 
     test('blogs return json', async () => {
         await api
@@ -69,7 +70,6 @@ describe('test listBack', () => {
             "important": true
         }
 
-
         await api
             .post('/api/blogs')
             .send(validBlog)
@@ -89,11 +89,8 @@ describe('test listBack', () => {
             "title": "Barrsss Potter",
             "author": " Carre23333y",
             "url": "textestt",
-
-
             "important": true
         }
-
 
         await api
             .post('/api/blogs')
@@ -104,8 +101,6 @@ describe('test listBack', () => {
         const response = await api.get('/api/blogs')
         assert.strictEqual(response.body[response.body.length - 1].likes, 0)
     })
-
-
 
     test('title or url missing returns 400', async () => {
 
@@ -122,6 +117,35 @@ describe('test listBack', () => {
             .expect(400)
 
 
+
+    })
+
+
+    test('delete the first blog ', async () => {
+
+        const first = await api.get('/api/blogs')
+
+
+        await api
+            .delete(`/api/blogs/${first.body[0].id}`)
+            .expect(204)
+
+        const response = await api.get('/api/blogs')
+        assert.strictEqual(response.body.length, first.body.length - 1)
+
+    })
+
+    test('update to 10 likes', async () => {
+        const first = await api.get('/api/blogs')
+        const id = first.body[0].id
+
+        await api
+            .put(`/api/blogs/${id}`)
+            .send({ "likes": 10 })
+            .expect(200)
+
+       const response = await api.get(`/api/blogs/`)
+       assert.strictEqual(response.body[0].likes, 10) 
 
     })
 
