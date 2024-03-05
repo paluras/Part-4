@@ -1,8 +1,18 @@
+// const jwt = require('jsonwebtoken')
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
+
+// const getTokenFrom = request => {
+//   const authorization = request.get('authorization')
+//   if (authorization && authorization.startsWith('Bearer ')) {
+//     return authorization.replace('Bearer ', '')
+//   }
+//   return null
+// }
 
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
+  const blogs = await Blog.find({}).populate('user', {username: 1 , name: 1 })
   response.json(blogs)
 })
 
@@ -25,11 +35,15 @@ blogsRouter.put('/:id', async (request, response) => {
 blogsRouter.post('/', async (request, response, next) => {
   const body = request.body
 
+  const user = await User.findById(body.userId)
+
   const blog = new Blog({
     title: body.title,
     author: body.author,
     url: body.url,
     likes: body.likes || 0, // Defaulting to 0 if not provided
+    user: user.id
+
   })
 
 
@@ -41,6 +55,9 @@ blogsRouter.post('/', async (request, response, next) => {
 
   try {
     const saveBlog = await blog.save()
+    user.blogs = user.blogs.concat(saveBlog._id)
+    await user.save()
+    
     response.status(201).json(saveBlog)
 
   } catch (exception) {
